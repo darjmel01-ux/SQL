@@ -1,3 +1,46 @@
+QUERYS
+
+--Aquí estoy ordenando los items por precio, del más caro al más barato--
+--Here I'm filtering the items by price, from highest to lowest--
+
+SELECT price, item_name
+FROM superstore
+ORDER BY price desc
+;
+
+--Aquí quiero saber cuál es el promedio de precio de todos los productos--
+--Here I want to know what's the average price of all products--
+
+SELECT AVG(price)
+FROM superstore
+;
+
+--Aquí estoy viendo cuál es el precio promedio de los productos de la categoría "Kitchen Supplies"--
+--Here I'm looking for the average price of all products into the "Kitchen Supplies" category--
+
+SELECT AVG(price), category
+FROM superstore
+WHERE category = "Kitchen Supplies"
+;
+
+--Aquí quiero saber cuánto stock hay de los productos, de menor a mayor--
+--Here I want to know how many stock there is of the products, from lowest to highest--
+
+SELECT item_name, stock_quantity
+FROM superstore
+ORDER BY stock_quantity asc
+;
+
+
+
+
+
+
+
+
+
+
+
 CREATE TABLE superstore (
     item_id INTEGER PRIMARY KEY,
     item_name TEXT,
