@@ -167,3 +167,94 @@ SELECT
 FROM febsales
 WHERE location LIKE '%Los Angeles%'
 GROUP BY product;
+
+
+------------------------------------------------------------
+-- 9) Which locations in New York received at least 3 orders in January,
+--    and how many orders did they each receive?
+--
+-- 🇬🇧 This query lists all locations in New York that received
+-- at least 3 valid orders in January. It shows each location
+-- along with the total number of orders placed there.
+--
+-- 🇪🇸 Esta consulta lista todas las ubicaciones en Nueva York
+-- que recibieron al menos 3 pedidos válidos en enero.
+-- Muestra cada ubicación junto con el número total de pedidos
+-- realizados en ella.
+------------------------------------------------------------
+
+SELECT
+    location,
+    COUNT(orderid) AS numorders
+FROM jansales
+WHERE LENGTH(orderid) = 6
+  AND orderid <> 'Order ID'
+  AND location LIKE '%New York%'
+GROUP BY location
+HAVING numorders >= 3;
+
+
+------------------------------------------------------------
+-- 11) What was the average amount spent per account in February?
+--
+-- 🇬🇧 This query computes the average amount spent per account in February
+-- by dividing the total spend (price × quantity across all orders) by the
+-- number of distinct customer accounts.
+--
+-- 🇪🇸 Esta consulta calcula el gasto promedio por cuenta en febrero,
+-- dividiendo el gasto total (precio × cantidad en todos los pedidos)
+-- entre el número de cuentas de cliente distintas.
+------------------------------------------------------------
+
+SELECT
+    SUM(febsales.price * febsales.quantity) / COUNT(DISTINCT customers.acctnum) AS avgxacct
+FROM febsales
+JOIN customers
+    ON febsales.orderid = customers.order_id
+WHERE LENGTH(customers.order_id) = 6
+  AND customers.order_id <> 'Order ID';
+
+
+------------------------------------------------------------
+-- 12) What was the average quantity of products purchased per account in February?
+--
+-- 🇬🇧 This query computes the overall average quantity of products purchased
+-- per account in February by dividing the total quantity of items purchased
+-- by the number of distinct customer accounts.
+--
+-- 🇪🇸 Esta consulta calcula el promedio general de productos comprados por
+-- cuenta en febrero, dividiendo la cantidad total de ítems comprados entre
+-- el número de cuentas de cliente distintas.
+------------------------------------------------------------
+
+SELECT
+    SUM(febsales.quantity) / COUNT(DISTINCT customers.acctnum) AS quanxacc
+FROM febsales
+JOIN customers
+    ON febsales.orderid = customers.order_id
+WHERE LENGTH(customers.order_id) = 6
+  AND customers.order_id <> 'Order ID';
+
+
+------------------------------------------------------------
+-- 13) Which product brought in the most revenue in January,
+--     and how much revenue did it bring in total?
+--
+-- 🇬🇧 This query finds the product that generated the highest total
+-- revenue in January. It multiplies quantity × price for each row,
+-- sums the results for each product, and then orders them to return
+-- the top product by revenue.
+--
+-- 🇪🇸 Esta consulta encuentra el producto que generó el mayor ingreso
+-- total en enero. Multiplica cantidad × precio para cada fila, suma
+-- los resultados por producto y luego los ordena para devolver el
+-- producto con más ingresos.
+------------------------------------------------------------
+
+SELECT
+    product,
+    SUM(quantity * price) AS revenue
+FROM jansales
+GROUP BY product
+ORDER BY revenue DESC
+LIMIT 1;
