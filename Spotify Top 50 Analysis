@@ -1,0 +1,106 @@
+
+/* =========================
+   🎵 SQL Portfolio – Spotify Top 50 Analysis
+   EN: Each challenge includes the prompt (EN/ES) and the SQL solution.
+   ES: Cada reto incluye el enunciado (EN/ES) y la consulta SQL.
+   ========================= */
+
+/*  The Champions List
+   EN: "I want a simple ranked list of the top 10 most popular songs on the chart. Show me the track name, artist, and its popularity score, ordered from highest to lowest."
+   ES: "Quiero una lista simple con el top 10 de las canciones más populares del chart. Muéstrame el nombre de la canción, el artista y su puntaje de popularidad, ordenado de mayor a menor." */
+SELECT
+  track_name,
+  artist_name,
+  popularity
+FROM Spotifydata
+ORDER BY popularity DESC
+LIMIT 10;
+
+/*  Artist Spotlight
+   EN: "Which artists appear the most in the Top 50? Give me a count of songs per artist, but only show artists who have more than one song on the list. Order it so the artists with the most songs are at the top."
+   ES: "¿Qué artistas aparecen más en el Top 50? Dame un conteo de canciones por artista, pero muestra solo los que tienen más de una canción. Ordénalos con los que más canciones tienen en la parte superior." */
+SELECT
+  artist_name,
+  COUNT(track_name) AS num_songs
+FROM Spotifydata
+GROUP BY artist_name
+HAVING COUNT(*) > 1
+ORDER BY num_songs DESC;
+
+/*  The Dance Floor Fillers
+   EN: "The marketing team wants to promote the most danceable songs for a new campaign. Get the top 5 tracks with the highest danceability score. Show track, artist, and danceability."
+   ES: "El equipo de marketing quiere promover las canciones más bailables. Obtén el top 5 con mayor puntaje de danceability. Muestra canción, artista y danceability." */
+SELECT
+  track_name,
+  artist_name,
+  danceability
+FROM Spotifydata
+ORDER BY danceability DESC
+LIMIT 5;
+
+/*  Energy vs. Popularity
+   EN: "Is there a correlation between a song's energy and its popularity? Show the average popularity for songs with high energy (energy > 0.8) vs. lower energy (energy <= 0.8)."
+   ES: "¿Hay correlación entre la energía y la popularidad? Muestra la popularidad promedio para canciones con alta energía (energy > 0.8) vs. energía menor o igual (<= 0.8)." */
+SELECT
+  CASE
+    WHEN energy > 0.8 THEN 'High Energy'
+    ELSE 'Low/Medium Energy'
+  END AS energy_group,
+  AVG(popularity) AS avg_popularity
+FROM Spotifydata
+GROUP BY energy_group;
+
+/*  Key Signature Analysis
+   EN: "What is the distribution of songs by their key? List key and count, ordered from most common to least."
+   ES: "¿Cuál es la distribución de canciones por tonalidad (key)? Lista la tonalidad y el conteo, de más común a menos." */
+SELECT
+  song_key,
+  COUNT(track_name) AS songs_by_key
+FROM Spotifydata
+GROUP BY song_key
+ORDER BY songs_by_key DESC;
+
+/*  Olivia Rodrigo Deep Dive
+   EN: "List all Olivia Rodrigo songs in the Top 50 with energy, valence, and speechiness."
+   ES: "Lista todas las canciones de Olivia Rodrigo en el Top 50 con energía, valencia y speechiness." */
+SELECT
+  track_name,
+  energy,
+  valence,
+  speechiness
+FROM Spotifydata
+WHERE artist_name = 'Olivia Rodrigo';
+
+/*  The Feel-Good Hits
+   EN: "Find all songs with valence > 0.8. Show track, artist, and valence, ordered by valence desc."
+   ES: "Encuentra todas las canciones con valencia > 0.8. Muestra canción, artista y valencia, ordenado de mayor a menor." */
+SELECT
+  track_name,
+  artist_name,
+  valence
+FROM Spotifydata
+WHERE valence > 0.8
+ORDER BY valence DESC;
+
+/*  The All-Rounder (Subqueries)
+   EN: "Find the song most above average across categories. Compute averages for danceability, energy, valence, then rank by:
+       (danceability - avg_dance) + (energy - avg_energy) + (valence - avg_valence). Return the top 1."
+   ES: "Encuentra la canción más por encima del promedio en varias categorías. Calcula promedios de danceability, energy y valence, y ordena por:
+       (danceability - avg_dance) + (energy - avg_energy) + (valence - avg_valence). Devuelve la #1."
+   NOTE/NOTA: This problem introduced subqueries for aggregate comparisons / Este problema introdujo subconsultas para comparaciones con agregados.
+   EXTRA: This final problem introduced me to a new concept. After researching and understanding the solution using subqueries for calculations, I was able to successfully execute it. 
+   EXTRA: This final problem introduced me to a new concept. After researching and understanding the solution using subqueries for calculations, I was able to successfully execute it. */
+SELECT
+  track_name,
+  artist_name,
+  danceability,
+  energy,
+  valence,
+  (danceability - (SELECT AVG(danceability) FROM Spotifydata)) +
+  (energy       - (SELECT AVG(energy)       FROM Spotifydata)) +
+  (valence      - (SELECT AVG(valence)      FROM Spotifydata)) AS total_difference_score
+FROM Spotifydata
+ORDER BY total_difference_score DESC
+LIMIT 1;
+```
+
