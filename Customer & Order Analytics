@@ -148,3 +148,22 @@ SELECT
 FROM bit_db.jansales
 WHERE LENGTH(orderid) = 6
   AND orderid <> 'Order ID';
+
+
+------------------------------------------------------------
+-- 8) List all the products sold in Los Angeles in February,
+--    and include how many of each were sold.
+--
+-- 🇬🇧 This query retrieves all products sold in Los Angeles during February,
+-- showing the total quantity sold for each product.
+--
+-- 🇪🇸 Esta consulta obtiene todos los productos vendidos en Los Ángeles
+-- durante febrero, mostrando la cantidad total vendida de cada producto.
+------------------------------------------------------------
+
+SELECT
+    product,
+    SUM(quantity) AS sold
+FROM febsales
+WHERE location LIKE '%Los Angeles%'
+GROUP BY product;
