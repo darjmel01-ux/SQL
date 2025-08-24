@@ -195,6 +195,24 @@ HAVING numorders >= 3;
 
 
 ------------------------------------------------------------
+-- 10) How many of each type of headphone were sold in February?
+--
+-- 🇬🇧 This query lists each type of headphone sold in February
+-- and shows the total quantity of units sold for each product.
+--
+-- 🇪🇸 Esta consulta lista cada tipo de audífono vendido en febrero
+-- y muestra la cantidad total de unidades vendidas de cada producto.
+------------------------------------------------------------
+
+SELECT
+    product,
+    SUM(quantity) AS total_sold
+FROM febsales
+WHERE product LIKE '%headph%'
+GROUP BY product;
+
+
+------------------------------------------------------------
 -- 11) What was the average amount spent per account in February?
 --
 -- 🇬🇧 This query computes the average amount spent per account in February
