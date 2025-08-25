@@ -1,0 +1,262 @@
+/* =========================
+🎵 SQL Portfolio – Chinook Database
+EN: This file contains a set of SQL queries answering business-oriented questions 
+using the Chinook sample database. Each query includes comments in English and Spanish.
+
+ES: Este archivo contiene un conjunto de consultas SQL que responden preguntas de negocio 
+utilizando la base de datos de ejemplo Chinook. Cada consulta incluye comentarios en inglés y español.
+========================= */
+
+/* 
+ES: ¿Cuáles son los 10 clientes que más dinero han gastado?
+EN: Who are the 10 customers who have spent the most?
+*/
+SELECT
+  firstname || " " || lastname AS name,
+  SUM(invoices.total) AS total
+FROM customers
+JOIN invoices
+  ON customers.customerid = invoices.CustomerId
+GROUP BY invoices.customerid
+ORDER BY total DESC
+LIMIT 10;
+
+
+/* 
+ES: ¿Cuánto hemos facturado por país (BillingCountry), ordenado de mayor a menor?
+EN: How much revenue have we generated per country, ordered from highest to lowest?
+*/
+SELECT
+  billingcountry,
+  SUM(total) AS total
+FROM invoices
+GROUP BY billingcountry
+ORDER BY total DESC;
+
+
+/* 
+ES: ¿Cuántas facturas se emitieron por año calendario?
+EN: How many invoices were issued per calendar year?
+*/
+SELECT
+  COUNT(invoiceId) AS num_invoices,
+  strftime('%Y', invoicedate) AS year
+FROM invoices
+GROUP BY strftime('%Y', invoicedate);
+
+
+/* 
+ES: ¿Cuál es la duración promedio (en minutos) de las pistas?
+EN: What is the average track length (in minutes)?
+NOTE: My SQLite build supports FLOOR(). In vanilla SQLite, a workaround may be required.
+*/
+WITH tempTable AS (
+    SELECT AVG(milliseconds) AS milliseconds
+    FROM tracks
+)
+SELECT
+  FLOOR((milliseconds * 1.0 / 1000) / 60) AS minutes,
+  ROUND(((milliseconds * 1.0 / 1000) / 60 - 
+         FLOOR((milliseconds * 1.0 / 1000) / 60)) * 60) AS seconds
+FROM tempTable;
+
+
+/* 
+ES: ¿Qué artistas tienen más álbumes publicados en la base? Top 10.
+EN: Which artists have the most albums published in the database? Top 10.
+*/
+SELECT
+  artists.Name,
+  COUNT(albums.Title) AS numberofalbums
+FROM artists
+JOIN albums
+  ON artists.ArtistId = albums.ArtistId
+GROUP BY artists.ArtistId
+ORDER BY numberofalbums DESC
+LIMIT 10;
+
+
+/* 
+ES: ¿Cuáles son los 5 géneros con mayor ingreso total?
+EN: What are the top 5 genres by total revenue?
+*/
+SELECT
+  genres.Name,
+  SUM(invoice_items.UnitPrice * invoice_items.Quantity) AS genre_revenue
+FROM tracks
+JOIN invoice_items
+  ON tracks.TrackId = invoice_items.TrackId
+JOIN genres
+  ON tracks.GenreId = genres.GenreId
+GROUP BY genres.Name
+ORDER BY genre_revenue DESC
+LIMIT 5;
+
+
+/* 
+ES: ¿Qué 10 canciones acumulan más unidades vendidas?
+EN: Which 10 tracks have sold the most units?
+*/
+SELECT
+  tracks.Name,
+  SUM(invoice_items.Quantity) AS units_sold
+FROM tracks
+JOIN invoice_items
+  ON tracks.TrackId = invoice_items.TrackId
+GROUP BY tracks.TrackId
+ORDER BY units_sold DESC
+LIMIT 10;
+
+
+/* 
+ES: ¿Qué artista generó más ingresos (sumando todas sus pistas vendidas)?
+EN: Which artist generated the most revenue (summing all their sold tracks)?
+*/
+WITH table1 AS (
+    SELECT
+      invoice_items.Quantity,
+      invoice_items.UnitPrice,
+      invoice_items.TrackId,
+      tracks.AlbumId,
+      albums.AlbumId,
+      artists.ArtistId,
+      artists.Name
+    FROM invoice_items
+    JOIN tracks
+      ON invoice_items.TrackId = tracks.TrackId
+    JOIN albums
+      ON tracks.AlbumId = albums.AlbumId
+    JOIN artists
+      ON albums.ArtistId = artists.ArtistId
+),
+table2 AS (
+    SELECT
+      SUM(Quantity * UnitPrice) AS revenue,
+      COUNT(Quantity) AS units_sold,
+      Name
+    FROM table1
+    GROUP BY ArtistId
+)
+SELECT
+  Name,
+  revenue,
+  units_sold
+FROM table2
+ORDER BY revenue DESC
+LIMIT 1;
+
+
+/* 
+ES: ¿Cuántos clientes tiene asignados cada representante de soporte?
+EN: How many customers are assigned to each support representative?
+*/
+SELECT
+  employees.FirstName || ' ' || employees.LastName AS SupportRep,
+  COUNT(customers.CustomerId) AS clients_total
+FROM employees
+JOIN customers
+  ON employees.EmployeeId = customers.SupportRepId
+GROUP BY employees.EmployeeId;
+
+
+/* 
+ES: ¿Qué país tiene el mayor promedio de factura (AVG Total) y cuántas facturas se usaron?
+EN: Which country has the highest average invoice total and how many invoices were used?
+*/
+SELECT
+  BillingCountry,
+  AVG(Total) AS AvgXCountry,
+  COUNT(InvoiceID) AS num_invoices
+FROM invoices
+GROUP BY BillingCountry
+ORDER BY AvgXCountry DESC
+LIMIT 1;
+
+
+/* 
+ES: Lista las playlists con su número de pistas, de mayor a menor.
+EN: List playlists with their track count, from highest to lowest.
+*/
+SELECT
+  playlists.Name,
+  COUNT(playlist_track.TrackId) AS NumTracks
+FROM playlists
+JOIN playlist_track
+  ON playlists.PlaylistId = playlist_track.PlaylistId
+GROUP BY playlists.PlaylistId
+ORDER BY NumTracks DESC;
+
+
+/* 
+ES: Por cada país, ¿qué cliente tiene el mayor gasto total? (si hay empates, muestra todos).
+EN: For each country, which customer has the highest spend? (show ties if any).
+*/
+WITH table1 AS (
+    SELECT
+      invoices.BillingCountry,
+      SUM(invoices.Total) AS TotalSpent,
+      invoices.CustomerId,
+      customers.FirstName,
+      customers.LastName
+    FROM invoices
+    JOIN customers
+      ON invoices.CustomerId = customers.CustomerId
+    GROUP BY invoices.CustomerId, invoices.BillingCountry
+)
+SELECT
+  BillingCountry,
+  FirstName || " " || LastName AS name,
+  TotalSpent
+FROM table1
+WHERE TotalSpent = (
+    SELECT MAX(TotalSpent)
+    FROM table1 AS table2
+    WHERE table2.BillingCountry = table1.BillingCountry
+)
+ORDER BY TotalSpent DESC, BillingCountry;
+
+
+/* 
+ES: Para cada año, ¿qué artista generó más ingresos ese año?
+EN: For each year, which artist generated the most revenue?
+*/
+WITH table1 AS (
+    SELECT
+      invoice_items.Quantity,
+      invoice_items.UnitPrice,
+      invoice_items.TrackId,
+      tracks.AlbumId,
+      albums.AlbumId,
+      artists.ArtistId,
+      artists.Name,
+      invoices.Total,
+      strftime('%Y', invoices.InvoiceDate) AS YEAR
+    FROM invoice_items
+    JOIN tracks
+      ON invoice_items.TrackId = tracks.TrackId
+    JOIN albums
+      ON tracks.AlbumId = albums.AlbumId
+    JOIN artists
+      ON albums.ArtistId = artists.ArtistId
+    JOIN invoices
+      ON invoice_items.InvoiceId = invoices.InvoiceId
+),
+table2 AS (
+    SELECT
+      SUM(Quantity * UnitPrice) AS revenue,
+      YEAR,
+      Name
+    FROM table1
+    GROUP BY YEAR, Name
+)
+SELECT
+  Name,
+  revenue,
+  YEAR
+FROM table2
+WHERE revenue = (
+    SELECT MAX(revenue)
+    FROM table2 AS table3
+    WHERE table3.YEAR = table2.YEAR
+)
+ORDER BY YEAR DESC, revenue;
